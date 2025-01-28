@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نتائج مدرسة النوبارية الرسميه لغات  </title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(to right, black, #8ec5fc);
+        }
+
+        .loader {
+            border-top-color: #3498db;
+            animation: spinner 1.5s linear infinite;
+        }
+
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-appear {
+            animation: bounceIn 0.8s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: translateY(-20px); }
+            50% { opacity: 0.5; transform: translateY(0px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .p {
+            color: wait;
+            font-size: 12px;
+            font-family: Cairo;
+            position: end;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto px-4 py-12">
+        <h1 class="text-5xl font-bold text-center text-white animate__animated animate__fadeInUp">
+            <i class="fas fa-school"></i>  نتيجه مدرسه النوبارية الثانوية العسكريه  
+        </h1>
+
+        <div class="mt-8 bg-white shadow-lg rounded-lg p-8">
+            <form id="searchForm" class="space-y-6 animate__animated animate__zoomIn">
+                <div class="relative">
+                    <input type="text" id="studentId" placeholder="    رقم الطالب"
+                        class="w-full p-4 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-400" required>
+                    <i class="fas fa-id-card absolute right-3 top-4 text-gray-400"></i>
+                </div>
+                <div>
+                    <select id="grade" class="w-full p-4 rounded-lg border border-gray-300" required>
+                        <option value="">اختر الصف</option>
+                        <option value="first">الأول الثانوي</option>
+                        <option value="second">الثاني الثانوي</option>
+                    </select>
+                </div>
+                <div id="sectionContainer" class="hidden">
+                    <select id="section" class="w-full p-4 rounded-lg border border-gray-300">
+                        <option value="scientific">علمي</option>
+                        <option value="literary">أدبي</option>
+                    </select>
+                </div>
+                <button type="submit"
+                    class="w-full py-3 bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold rounded-lg shadow-md hover:shadow-xl">
+                    عرض النتيجة <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+
+        <div id="loader" class="hidden flex justify-center items-center mt-8">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+        </div>
+
+        <div id="result" class="hidden bg-white rounded-lg shadow-lg p-6 result-appear mt-8">
+        </div>
+
+        <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-8" role="alert">
+            <strong class="font-bold">خطأ!</strong>
+            <span class="block sm:inline" id="errorMessage"></span>
+        </div>
+
+        <p class="p">
+            الان درجه الصف الاول والثاني الثانوي ادخل رقم القومي واختر الصف والشعبه  لي عرض النتيجه علما بي ان 
+            المدرسه ليست مسؤله علي اي خطاء في  الدرجات يرجي التوجه الي المدرسه  لي جلب الشهاده من المدرسه 
+        </p>
+    </div>
+<script src="data.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init();
+
+        document.getElementById('grade').addEventListener('change', function() {
+            document.getElementById('sectionContainer').classList.toggle('hidden', this.value !== 'second');
+        });
+
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const studentId = document.getElementById('studentId').value;
+            const grade = document.getElementById('grade').value;
+            const section = document.getElementById('section').value;
+
+            // Show loader
+            document.getElementById('loader').classList.remove('hidden');
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+
+            // Simulate API call
+            setTimeout(() => {
+                try {
+                    const studentData = findStudent(studentId, grade, section);
+                    if (studentData) {
+                        displayResult(studentData, grade, section);
+                    } else {
+                        throw new Error('لم يتم العثور على بيانات الطالب');
+                    }
+                } catch (err) {
+                    showError(err.message);
+                } finally {
+                    document.getElementById('loader').classList.add('hidden');
+                }
+            }, 1000);
+        });
+
+        function findStudent(id, grade, section) {
+           
+
+            if (grade === 'first') {
+                return studentsDatabase.first[id];
+            } else if (grade === 'second' && section) {
+                return studentsDatabase.second[section][id];
+            }
+            return null;
+        }
+
+        function displayResult(student, grade, section) {
+            const subjects = Object.keys(student.scores);
+            const maxGrades = {
+                    "اللغة العربية": 80,
+                    "اللغة الأجنبية الأولى": 60,
+                    "الرياضيات": 60,
+                    "الفيزياء": 60,
+                    "الكيمياء": 60,
+                    "الأحياء": 60,
+                    "علم النفس": 60,
+                    "التاريخ": 60,
+                    "الجغرافيا": 60,
+                    "اللغة الإنجليزية": 60,
+                    "العلوم المتكامله":60,
+                    "الفلسفة": 60,
+                    "اللغة الفرنسية": 20,
+                    "رياضه ادبي":20
+                };
+            const totalScore = subjects.reduce((sum, subject) => sum + student.scores[subject], 0);
+            const maxTotal = subjects.reduce((sum, subject) => sum + maxGrades[subject], 0);
+            const percentage = ((totalScore / maxTotal) * 100).toFixed(2);
+
+            let resultHTML = `
+                <h2 class="text-2xl font-bold mb-4">${student.name}</h2>
+                <p class="mb-2"><strong>رقم الجلوس:</strong> ${document.getElementById('studentId').value}</p>
+                <p class="mb-2"><strong>الصف:</strong> ${grade === 'first' ? 'الأول الثانوي' : 'الثاني الثانوي'}</p>
+                ${grade === 'second' ? `<p class="mb-4"><strong>الشعبة:</strong> ${section === 'scientific' ? 'علمي' : 'أدبي'}</p>` : ''}
+                <table class="w-full mb-4">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="px-4 py-2 text-right">المادة</th>
+                            <th class="px-4 py-2 text-center">الدرجة</th>
+                            <th class="px-4 py-2 text-center">النسبة المئوية</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            subjects.forEach(subject => {
+                const score = student.scores[subject];
+                const maxGrade = maxGrades[subject] || 20; // Default to 20 if not specified
+                const subjectPercentage = ((score / maxGrade) * 100).toFixed(2);
+                resultHTML += `
+                    <tr>
+                        <td class="border px-4 py-2">${subject}</td>
+                        <td class="border px-4 py-2 text-center">${score}/${maxGrade}</td>
+                        <td class="border px-4 py-2 text-center">${subjectPercentage}%</td>
+                    </tr>
+                `;
+            });
+
+            resultHTML += `
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-gray-200 font-bold">
+                            <td class="border px-4 py-2">المجموع الكلي</td>
+                            <td class="border px-4 py-2 text-center">${totalScore}/${maxTotal}</td>
+                            <td class="border px-4 py-2 text-center">${percentage}%</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="text-center">
+                    <p class="text-xl font-bold ${percentage >= 50 ? 'text-green-600' : 'text-red-600'}">
+                        ${percentage >= 50 ? 'ناجح' : 'راسب'}
+                    </p>
+                </div>
+            `;
+
+            document.getElementById('result').innerHTML = resultHTML;
+            document.getElementById('result').classList.remove('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('error').classList.remove('hidden');
+        }
+    </script>
+</body>
+      </html>
